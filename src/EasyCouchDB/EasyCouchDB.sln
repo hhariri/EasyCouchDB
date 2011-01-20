@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasyCouchDB", "EasyCouchDB.csproj", "{1987A6E8-9290-4735-9BFF-278EBD5B2E34}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasyCouchDB.Specs", "..\EasyCouchDB.Specs\EasyCouchDB.Specs.csproj", "{0DF613CD-0557-4373-9C1A-2370862CEC8D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1987A6E8-9290-4735-9BFF-278EBD5B2E34}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1987A6E8-9290-4735-9BFF-278EBD5B2E34}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1987A6E8-9290-4735-9BFF-278EBD5B2E34}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1987A6E8-9290-4735-9BFF-278EBD5B2E34}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0DF613CD-0557-4373-9C1A-2370862CEC8D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0DF613CD-0557-4373-9C1A-2370862CEC8D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0DF613CD-0557-4373-9C1A-2370862CEC8D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0DF613CD-0557-4373-9C1A-2370862CEC8D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
