@@ -5,9 +5,9 @@ namespace EasyCouchDB
     public interface ICouchDatabase<TDocument, TId> where TDocument : class, IDocument<TId>
     {
         string Save(TDocument document);
-        TDocument GetDocument(TId id);
-        void DeleteDocument(TId id);
+        TDocument Load(TId id);
+        void Delete(TId id);
         IEnumerable<dynamic> GetAllDocuments();
-        IEnumerable<TDocument> GetDocuments();
+        IEnumerable<TDocument> Documents();
     }
 }

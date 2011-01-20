@@ -57,7 +57,7 @@ namespace EasyCouchDB.Specs
 
         Because of = () =>
         {
-            var document = CouchDatabase.GetDocument(id);
+            var document = CouchDatabase.Load(id);
 
             document.Fullname = "New Name";
 
@@ -67,7 +67,7 @@ namespace EasyCouchDB.Specs
 
         It should_update_the_document = () =>
         {
-            var updatedDocument = CouchDatabase.GetDocument(id);
+            var updatedDocument = CouchDatabase.Load(id);
 
             updatedDocument.Fullname.ShouldEqual("New Name");
         };
@@ -83,7 +83,7 @@ namespace EasyCouchDB.Specs
 
         Because of = () =>
         {
-            user = CouchDatabase.GetDocument(DocumentId);
+            user = CouchDatabase.Load(DocumentId);
         };
 
         It should_retrieve_the_document = () => user.ShouldNotBeNull();
@@ -109,14 +109,14 @@ namespace EasyCouchDB.Specs
 
         Because of = () =>
         {
-            CouchDatabase.DeleteDocument(randomDocumentId);
+            CouchDatabase.Delete(randomDocumentId);
         };
 
         It should_delete_the_document = () =>
         {
             try
             {
-                CouchDatabase.GetDocument(randomDocumentId);
+                CouchDatabase.Load(randomDocumentId);
             }
             catch (DocumentNotFoundException)
             {
@@ -132,7 +132,10 @@ namespace EasyCouchDB.Specs
     {
         Because of = () =>
         {
-            documents = CouchDatabase.GetDocuments();
+            documents = from d in CouchDatabase.Documents()
+                        select d;
+
+            //documents = CouchDatabase.GetDocuments();
         };
 
         It should_return_all_documents = () =>
@@ -166,7 +169,7 @@ namespace EasyCouchDB.Specs
         {
             try
             {
-                CouchDatabase.DeleteDocument("_design/easycouchdb_views");
+                CouchDatabase.Delete("_design/easycouchdb_views");
             }
             catch (Exception)
             {

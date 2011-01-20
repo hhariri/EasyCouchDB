@@ -63,7 +63,7 @@ namespace EasyCouchDB
 
         }
 
-        public TDocument GetDocument(TId id)
+        public TDocument Load(TId id)
         {
 
             var response = _httpClient.Get(GetDocumentUrl(id));
@@ -76,7 +76,7 @@ namespace EasyCouchDB
             throw new DocumentNotFoundException("id");
         }
 
-        public void DeleteDocument(TId id)
+        public void Delete(TId id)
         {
             var response  = _httpClient.Get(GetDocumentUrl(id));
 
@@ -103,36 +103,40 @@ namespace EasyCouchDB
             return wrapper.Rows.Select(t => t.Document).ToList();
         }
 
-        public IEnumerable<TDocument> GetDocuments()
+        public IEnumerable<TDocument> Documents()
         {
             var response = _httpClient.Get(string.Format("{0}/_design/easycouchdb_views/_view/all", _baseUrl));
 
             if (response.StatusCode != HttpStatusCode.OK)
             {
                 // Save 
-                dynamic mappingFunction = new ExpandoObject();
-
-                mappingFunction.map = "function (doc) { if (doc.internalDocType=='" + typeof(TDocument).Name + "') { emit(doc.id,doc);}}";
-                dynamic mapping = new ExpandoObject();
-
-                mapping.all = mappingFunction;
-
-                dynamic viewDocument = new ExpandoObject();
-
-                viewDocument._id = "_design/easycouchdb_views";
-                viewDocument.language = "javascript";
-                viewDocument.views = mapping;
-
-                _httpClient.Put(string.Format("{0}/_design/easycouchdb_views", _baseUrl), viewDocument, HttpContentTypes.ApplicationJson);
+                CreateView();
 
                 response = _httpClient.Get(string.Format("{0}/_design/easycouchdb_views/_view/all", _baseUrl));
             }
 
-            
-            
+
             var wrapper = response.StaticBody<MultiRowResponseWrapperForDocs<TDocument>>();
 
             return wrapper.Rows.Select(t => t.Document).ToList();
+        }
+
+        void CreateView()
+        {
+            dynamic mappingFunction = new ExpandoObject();
+
+            mappingFunction.map = "function (doc) { if (doc.internalDocType=='" + typeof(TDocument).Name + "') { emit(doc.id,doc);}}";
+            dynamic mapping = new ExpandoObject();
+
+            mapping.all = mappingFunction;
+
+            dynamic viewDocument = new ExpandoObject();
+
+            viewDocument._id = "_design/easycouchdb_views";
+            viewDocument.language = "javascript";
+            viewDocument.views = mapping;
+
+            _httpClient.Put(string.Format("{0}/_design/easycouchdb_views", _baseUrl), viewDocument, HttpContentTypes.ApplicationJson);
         }
     }
 }
