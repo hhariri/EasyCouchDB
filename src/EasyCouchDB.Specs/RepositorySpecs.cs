@@ -159,6 +159,20 @@ namespace EasyCouchDB.Specs
             var user = new User { Id = DocumentId, Fullname = "My First User", EmailAddress = "MyEmail@MyDomain.com" };
 
             CouchDatabase.Save(user);
+
+        };
+
+        Cleanup cleanup = () =>
+        {
+            try
+            {
+                CouchDatabase.DeleteDocument("_design/easycouchdb_views");
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
         };
 
         protected static ICouchDatabase<User, string> CouchDatabase;
