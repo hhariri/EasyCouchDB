@@ -1,18 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Linq;
 using System.Net;
 using EasyHttp.Http;
 
 namespace EasyCouchDB
 {
-    public class Repository<TDocument, TId>: IRepository<TDocument> where TDocument: class, IDocument<TId>
+    public class CouchDatabase<TDocument, TId>: ICouchDatabase<TDocument, TId> where TDocument: class, IDocument<TId>
     {
         readonly string _baseUrl;
         readonly HttpClient _httpClient;
 
 
-        public Repository(string host, int port, string database)
+        public CouchDatabase(string host, int port, string database)
         {
             _baseUrl = String.Format("http://{0}:{1}/{2}", host, port, database);
 
@@ -32,7 +33,8 @@ namespace EasyCouchDB
             {
                 throw new ArgumentNullException("document");
             }
-            
+
+            document.DocumentType = typeof (TDocument).Name;
 
             if (document.Id != null)
             {
@@ -92,15 +94,45 @@ namespace EasyCouchDB
             }
         }
 
-        public IEnumerable<TDocument> GetAllDocuments()
+        public IEnumerable<dynamic> GetAllDocuments()
         {
             var response = _httpClient.Get(String.Format("{0}/_all_docs?include_docs=true", _baseUrl));
 
-            var wrapper = response.StaticBody<MultiRowResponseWrapper<TDocument>>();
+            var wrapper = response.StaticBody<MultiRowResponseWrapperForAllDocs<TDocument>>();
 
             return wrapper.Rows.Select(t => t.Document).ToList();
         }
 
+        public IEnumerable<TDocument> GetDocuments()
+        {
+            var response = _httpClient.Get(string.Format("{0}/_design/easycouchdb_views/_view/all", _baseUrl));
 
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                // Save 
+                dynamic mappingFunction = new ExpandoObject();
+
+                mappingFunction.map = "function (doc) { if (doc.internalDocType=='" + typeof(TDocument).Name + "') { emit(doc.id,doc);}}";
+                dynamic mapping = new ExpandoObject();
+
+                mapping.all = mappingFunction;
+
+                dynamic viewDocument = new ExpandoObject();
+
+                viewDocument._id = "_design/easycouchdb_views";
+                viewDocument.language = "javascript";
+                viewDocument.views = mapping;
+
+                _httpClient.Put(string.Format("{0}/_design/easycouchdb_views", _baseUrl), viewDocument, HttpContentTypes.ApplicationJson);
+
+                response = _httpClient.Get(string.Format("{0}/_design/easycouchdb_views/_view/all", _baseUrl));
+            }
+
+            
+            
+            var wrapper = response.StaticBody<MultiRowResponseWrapperForDocs<TDocument>>();
+
+            return wrapper.Rows.Select(t => t.Document).ToList();
+        }
     }
 }

@@ -2,7 +2,7 @@
 
 namespace EasyCouchDB
 {
-    public class Rows<TDocument> 
+    public class AllDocsRows<TDocument> 
     {
         [JsonName("doc")]
         public TDocument Document { get; set; }

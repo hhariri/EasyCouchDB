@@ -6,14 +6,14 @@ using Machine.Specifications;
 
 namespace EasyCouchDB.Specs
 {
-    [Subject(typeof(Repository<User, string>), "given a document database")]
+    [Subject(typeof(CouchDatabase<User, string>), "given a document database")]
     public class when_creating_a_new_document_with_no_id: DatabaseContext
     {
         Because of = () =>
         {
             user = new User {Fullname = "Jackson"};
 
-            id = repository.Save(user);
+            id = CouchDatabase.Save(user);
 
         };
 
@@ -23,7 +23,7 @@ namespace EasyCouchDB.Specs
         static string id;
     }
 
-    [Subject(typeof(Repository<User, string>), "given a document database")]
+    [Subject(typeof(CouchDatabase<User, string>), "given a document database")]
     public class when_creating_a_new_document_provided_an_id: DatabaseContext
     {
         Because of = () =>
@@ -32,7 +32,7 @@ namespace EasyCouchDB.Specs
 
             user = new User {Id = randomDocumentId , Fullname = "Jackson"};
 
-            id = repository.Save(user);
+            id = CouchDatabase.Save(user);
 
         };
 
@@ -42,7 +42,7 @@ namespace EasyCouchDB.Specs
         static string id;
     }
 
-    [Subject(typeof(Repository<User, string>), "given a document database")]
+    [Subject(typeof(CouchDatabase<User, string>), "given a document database")]
     public class when_updating_an_existing_document: DatabaseContext
     {
         Establish context = () =>
@@ -51,23 +51,23 @@ namespace EasyCouchDB.Specs
 
             user = new User { Id = randomDocumentId, Fullname = "Jackson" };
 
-            id = repository.Save(user);
+            id = CouchDatabase.Save(user);
 
         };
 
         Because of = () =>
         {
-            var document = repository.GetDocument(id);
+            var document = CouchDatabase.GetDocument(id);
 
             document.Fullname = "New Name";
 
-            repository.Save(document);
+            CouchDatabase.Save(document);
 
         };
 
         It should_update_the_document = () =>
         {
-            var updatedDocument = repository.GetDocument(id);
+            var updatedDocument = CouchDatabase.GetDocument(id);
 
             updatedDocument.Fullname.ShouldEqual("New Name");
         };
@@ -77,13 +77,13 @@ namespace EasyCouchDB.Specs
 
  
    
-    [Subject(typeof(Repository<User, string>), "given a document database")]
+    [Subject(typeof(CouchDatabase<User, string>), "given a document database")]
     public class when_getting_a_document_by_id_that_exists: DatabaseContext
     {
 
         Because of = () =>
         {
-            user = repository.GetDocument(DocumentId);
+            user = CouchDatabase.GetDocument(DocumentId);
         };
 
         It should_retrieve_the_document = () => user.ShouldNotBeNull();
@@ -97,26 +97,26 @@ namespace EasyCouchDB.Specs
         static User user;
     }
 
-    [Subject(typeof(Repository<User, string>), "given a document database")]
+    [Subject(typeof(CouchDatabase<User, string>), "given a document database")]
     public class when_deleting_an_existing_document: DatabaseContext
     {
         Establish context = () =>
         {
             randomDocumentId = string.Format("{0}DeleteTest", GetRandomDocumentId());
 
-            repository.Save(new User() { Id = randomDocumentId });
+            CouchDatabase.Save(new User() { Id = randomDocumentId });
         };
 
         Because of = () =>
         {
-            repository.DeleteDocument(randomDocumentId);
+            CouchDatabase.DeleteDocument(randomDocumentId);
         };
 
         It should_delete_the_document = () =>
         {
             try
             {
-                repository.GetDocument(randomDocumentId);
+                CouchDatabase.GetDocument(randomDocumentId);
             }
             catch (DocumentNotFoundException)
             {
@@ -127,12 +127,12 @@ namespace EasyCouchDB.Specs
         static string randomDocumentId;
     }
 
-    [Subject(typeof(Repository<User, string>), "given a document database")]
+    [Subject(typeof(CouchDatabase<User, string>), "given a document database")]
     public class when_getting_a_list_of_documents: DatabaseContext
     {
         Because of = () =>
         {
-            documents = repository.GetAllDocuments();
+            documents = CouchDatabase.GetDocuments();
         };
 
         It should_return_all_documents = () =>
@@ -154,21 +154,21 @@ namespace EasyCouchDB.Specs
         {
             DocumentId = GetRandomDocumentId();
 
-            repository = new Repository<User, string>("localhost", 5984, "easycouchdb");
+            CouchDatabase = new CouchDatabase<User, string>("localhost", 5984, "easycouchdb");
 
             var user = new User { Id = DocumentId, Fullname = "My First User", EmailAddress = "MyEmail@MyDomain.com" };
 
-            repository.Save(user);
+            CouchDatabase.Save(user);
         };
 
-        protected static Repository<User, string> repository;
+        protected static ICouchDatabase<User, string> CouchDatabase;
         protected static string DocumentId;
 
         protected static string GetRandomDocumentId()
         {
             var random = new Random();
           
-            return String.Format("{0}{1}", random.Next(10, 10000), DateTime.Now.ToShortTimeString());
+            return String.Format("{0}{1}", DateTime.Now.ToShortTimeString(), random.Next(10, 10000));
         }
     }
 }

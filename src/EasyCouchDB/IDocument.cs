@@ -4,5 +4,6 @@
     {
         TId Id { get; set; }
         string Revision { get; set; }
+        string DocumentType { get; set; }
     }
 }
