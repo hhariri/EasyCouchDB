@@ -49,10 +49,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AttachmentException.cs" />
+    <Compile Include="CouchServer.cs" />
     <Compile Include="DocsRows.cs" />
     <Compile Include="Document.cs" />
     <Compile Include="DocumentConflictException.cs" />
     <Compile Include="DocumentNotFoundException.cs" />
+    <Compile Include="ICouchServer.cs" />
     <Compile Include="IDocument.cs" />
     <Compile Include="ICouchDatabase.cs" />
     <Compile Include="MultiRowResponseWrapperForAllDocs.cs" />
@@ -60,6 +63,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="CouchDatabase.cs" />
     <Compile Include="AllDocsRows.cs" />
+    <Compile Include="ViewManager.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

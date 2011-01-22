@@ -13,7 +13,7 @@ namespace EasyCouchDB.Specs
         {
             user = new User {Fullname = "Jackson"};
 
-            id = CouchDatabase.Save(user);
+            id = couchDb.Save(user);
 
         };
 
@@ -32,7 +32,7 @@ namespace EasyCouchDB.Specs
 
             user = new User {Id = randomDocumentId , Fullname = "Jackson"};
 
-            id = CouchDatabase.Save(user);
+            id = couchDb.Save(user);
 
         };
 
@@ -51,23 +51,23 @@ namespace EasyCouchDB.Specs
 
             user = new User { Id = randomDocumentId, Fullname = "Jackson" };
 
-            id = CouchDatabase.Save(user);
+            id = couchDb.Save(user);
 
         };
 
         Because of = () =>
         {
-            var document = CouchDatabase.Load(id);
+            var document = couchDb.Load(id);
 
             document.Fullname = "New Name";
 
-            CouchDatabase.Save(document);
+            couchDb.Save(document);
 
         };
 
         It should_update_the_document = () =>
         {
-            var updatedDocument = CouchDatabase.Load(id);
+            var updatedDocument = couchDb.Load(id);
 
             updatedDocument.Fullname.ShouldEqual("New Name");
         };
@@ -83,7 +83,7 @@ namespace EasyCouchDB.Specs
 
         Because of = () =>
         {
-            user = CouchDatabase.Load(DocumentId);
+            user = couchDb.Load(DocumentId);
         };
 
         It should_retrieve_the_document = () => user.ShouldNotBeNull();
@@ -104,19 +104,19 @@ namespace EasyCouchDB.Specs
         {
             randomDocumentId = string.Format("{0}DeleteTest", GetRandomDocumentId());
 
-            CouchDatabase.Save(new User() { Id = randomDocumentId });
+            couchDb.Save(new User() { Id = randomDocumentId });
         };
 
         Because of = () =>
         {
-            CouchDatabase.Delete(randomDocumentId);
+            couchDb.Delete(randomDocumentId);
         };
 
         It should_delete_the_document = () =>
         {
             try
             {
-                CouchDatabase.Load(randomDocumentId);
+                couchDb.Load(randomDocumentId);
             }
             catch (DocumentNotFoundException)
             {
@@ -132,10 +132,9 @@ namespace EasyCouchDB.Specs
     {
         Because of = () =>
         {
-            documents = from d in CouchDatabase.Documents()
+            documents = from d in couchDb.Documents()
                         select d;
 
-            //documents = CouchDatabase.GetDocuments();
         };
 
         It should_return_all_documents = () =>
@@ -151,17 +150,21 @@ namespace EasyCouchDB.Specs
         static IEnumerable<User> documents;
     }
 
+
+
     public class DatabaseContext
     {
         Establish context = () =>
         {
             DocumentId = GetRandomDocumentId();
 
-            CouchDatabase = new CouchDatabase<User, string>("localhost", 5984, "easycouchdb");
+            var connection = new CouchServer("localhost", 5984, "easycouchdb");
+
+            couchDb = new CouchDatabase<User, string>(connection);
 
             var user = new User { Id = DocumentId, Fullname = "My First User", EmailAddress = "MyEmail@MyDomain.com" };
 
-            CouchDatabase.Save(user);
+            couchDb.Save(user);
 
         };
 
@@ -169,7 +172,7 @@ namespace EasyCouchDB.Specs
         {
             try
             {
-                CouchDatabase.Delete("_design/easycouchdb_views");
+                couchDb.Delete("_design/easycouchdb_views");
             }
             catch (Exception)
             {
@@ -178,14 +181,14 @@ namespace EasyCouchDB.Specs
             }
         };
 
-        protected static ICouchDatabase<User, string> CouchDatabase;
+        protected static ICouchDatabase<User, string> couchDb;
         protected static string DocumentId;
 
         protected static string GetRandomDocumentId()
         {
             var random = new Random();
           
-            return String.Format("{0}{1}", DateTime.Now.ToShortTimeString(), random.Next(10, 10000));
+            return String.Format("{0}{1}", DateTime.Now.Ticks, random.Next(10, 10000));
         }
     }
 }

@@ -44,15 +44,22 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AttachmentSpecs.cs" />
     <Compile Include="Helpers\User.cs" />
+    <Compile Include="LinqSpecs.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RepositorySpecs.cs" />
+    <Compile Include="CRUDSpecs.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\EasyCouchDB\EasyCouchDB.csproj">
       <Project>{1987A6E8-9290-4735-9BFF-278EBD5B2E34}</Project>
       <Name>EasyCouchDB</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Helpers\test.jpg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

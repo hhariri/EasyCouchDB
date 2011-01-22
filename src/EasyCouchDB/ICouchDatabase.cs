@@ -9,5 +9,7 @@ namespace EasyCouchDB
         void Delete(TId id);
         IEnumerable<dynamic> GetAllDocuments();
         IEnumerable<TDocument> Documents();
+        void SaveAttachment(TId id, string filename, string imageJpeg);
+        void DeleteAttachment(TId id, string attachmentName);
     }
 }
