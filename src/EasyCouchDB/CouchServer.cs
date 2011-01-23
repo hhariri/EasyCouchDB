@@ -50,45 +50,45 @@ namespace EasyCouchDB
 
         public HttpResponse Get(string uri)
         {
-            return _connection.Get(GetFullUri(uri));
+            return _connection.Get(GetFullUriIncludingHost(uri));
         }
 
         public HttpResponse Put(string uri, object data)
         {
-            _connection.Put(GetFullUri(uri), data, HttpContentTypes.ApplicationJson);
+            _connection.Put(GetFullUriIncludingHost(uri), data, HttpContentTypes.ApplicationJson);
 
             return _connection.Response;
         }
 
         public HttpResponse PutFile(string uri, string fileName, string contentType)
         {
-            _connection.PutFile(GetFullUri(uri), fileName, contentType);
+            _connection.PutFile(GetFullUriIncludingHost(uri), fileName, contentType);
 
             return _connection.Response;
         }
 
         public HttpResponse Post(string uri, object data)
         {
-            _connection.Post(GetFullUri(uri), data, HttpContentTypes.ApplicationJson);
+            _connection.Post(GetFullUriIncludingHost(uri), data, HttpContentTypes.ApplicationJson);
 
             return _connection.Response;
         }
 
         public HttpResponse Head(string uri)
         {
-            _connection.Head(GetFullUri(uri));
+            _connection.Head(GetFullUriIncludingHost(uri));
 
             return _connection.Response;
         }
 
         public HttpResponse Delete(string uri)
         {
-            _connection.Delete(GetFullUri(uri));
+            _connection.Delete(GetFullUriIncludingHost(uri));
 
             return _connection.Response;
         }
 
-        string GetFullUri(string uri)
+        string GetFullUriIncludingHost(string uri)
         {
             return (uri == "/") ? _baseUrl : String.Format("{0}/{1}", _baseUrl, uri);
         }

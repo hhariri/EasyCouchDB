@@ -39,9 +39,6 @@ namespace EasyCouchDB.Views
 {
     public class ViewManager : IViewManager
     {
-        // Due to limitations, we are treating each View as a separate design document and 
-        // the name of the view refers to the design document
-
         readonly ICouchServer _server;
 
         public ViewManager(ICouchServer server)
@@ -49,15 +46,15 @@ namespace EasyCouchDB.Views
             _server = server;
         }
 
-        public void CreateView(string viewName, string mapCode, string reduceCode = "")
+        public void CreateView(string designDocName, string mapCode, string reduceCode = "")
         {
             var mapReduce = new MapReduce(mapCode, reduceCode);
 
             var views = new Views(mapReduce);
 
-            var viewDocument = new ViewDocument(viewName) {Views = views};
+            var viewDocument = new ViewDocument(designDocName) {Views = views};
 
-            HttpResponse response = _server.Put(GetDesignDocUri(viewName), viewDocument);
+            var response = _server.Put(string.Format("_design/{0}", designDocName), viewDocument);
 
             if (response.StatusCode != HttpStatusCode.Created)
             {
@@ -65,16 +62,17 @@ namespace EasyCouchDB.Views
             }
         }
 
-        public bool ViewExists(string viewName)
+        public bool ViewExists(string designDocName, string viewName)
         {
-            HttpResponse response = _server.Head(GetDesignDocUri(viewName));
+            var response = _server.Head(GetDesignDocUri(designDocName, viewName));
 
             return response.StatusCode == HttpStatusCode.OK;
         }
 
-        public IEnumerable<TDocument> ExecuteView<TDocument>(string viewName)
+        public IEnumerable<TDocument> ExecuteView<TDocument>(string designDocName, string viewName)
         {
-            HttpResponse response = _server.Get(GetDesignDocUri(viewName) + "/_view/mapreduce");
+
+            var response = _server.Get(GetDesignDocUri(designDocName, viewName));
 
             if (response.StatusCode != HttpStatusCode.OK)
             {
@@ -86,9 +84,9 @@ namespace EasyCouchDB.Views
             return wrapper.Rows.Select(t => t.Document).ToList();
         }
 
-        static string GetDesignDocUri(string viewName)
+        static string GetDesignDocUri(string viewName, string view)
         {
-            return String.Format("_design/easycouchdb_view_{0}", viewName);
+            return String.Format("_design/{0}/_view/{1}", viewName, view);
         }
     }
 }

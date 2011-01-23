@@ -34,8 +34,8 @@ namespace EasyCouchDB.Views
 {
     public interface IViewManager
     {
-        void CreateView(string viewName, string mapCode, string reduceCode = "");
-        bool ViewExists(string viewName);
-        IEnumerable<TDocument> ExecuteView<TDocument>(string viewName);
+        void CreateView(string designDocName, string mapCode, string reduceCode = "");
+        bool ViewExists(string designDocName, string viewName);
+        IEnumerable<TDocument> ExecuteView<TDocument>(string designDocName, string viewName);
     }
 }

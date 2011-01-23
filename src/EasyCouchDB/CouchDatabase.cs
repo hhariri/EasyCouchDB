@@ -139,14 +139,14 @@ namespace EasyCouchDB
 
         public IEnumerable<TDocument> GetDocuments<TDocument>()
         {
-            if (!_viewManager.ViewExists("all"))
+            if (!_viewManager.ViewExists("all", "mapreduce"))
             {
-                _viewManager.CreateView("all",
+                _viewManager.CreateView("all", 
                                         "if (doc.internalDocType=='" + typeof (TDocument).Name +
                                         "') { emit(doc.id,doc);}");
             }
 
-            return _viewManager.ExecuteView<TDocument>("all");
+            return _viewManager.ExecuteView<TDocument>("all", "mapreduce");
         }
 
         public void SaveAttachment(object id, string filename, string contentType)

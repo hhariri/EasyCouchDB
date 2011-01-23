@@ -38,7 +38,7 @@ namespace EasyCouchDB.Specs
     {
         Establish context = () => { _viewManager = new ViewManager(Server); };
 
-        Because of = () => { exists = _viewManager.ViewExists("some_random_view_doc"); };
+        Because of = () => { exists = _viewManager.ViewExists("some_random_view_doc", "random_view"); };
 
         It should_return_false = () => { exists.ShouldBeFalse(); };
 
@@ -53,7 +53,7 @@ namespace EasyCouchDB.Specs
 
         Because of = () => { viewManager.CreateView(DocumentId, "", ""); };
 
-        It should_create_the_view_document = () => { viewManager.ViewExists(DocumentId).ShouldBeTrue(); };
+        It should_create_the_view_document_with_view_mapreduce = () => { viewManager.ViewExists(DocumentId, "mapreduce").ShouldBeTrue(); };
 
         static ViewManager viewManager;
     }
