@@ -17,21 +17,16 @@ namespace EasyCouchDB
             _connection.Request.Accept = HttpContentTypes.ApplicationJson;
         }
 
-     
+
         public HttpResponse Get(string uri)
         {
             return _connection.Get(GetFullUri(uri));
         }
 
-        string GetFullUri(string uri)
-        {
-            return (uri == "/") ? _baseUrl : String.Format("{0}/{1}", _baseUrl, uri);
-        }
-
         public HttpResponse Put(string uri, object data)
         {
             _connection.Put(GetFullUri(uri), data, HttpContentTypes.ApplicationJson);
-         
+
             return _connection.Response;
         }
 
@@ -61,6 +56,11 @@ namespace EasyCouchDB
             _connection.Delete(GetFullUri(uri));
 
             return _connection.Response;
+        }
+
+        string GetFullUri(string uri)
+        {
+            return (uri == "/") ? _baseUrl : String.Format("{0}/{1}", _baseUrl, uri);
         }
     }
 }

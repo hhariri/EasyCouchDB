@@ -8,7 +8,7 @@ namespace EasyCouchDB
         TDocument Load(TId id);
         void Delete(TId id);
         IEnumerable<dynamic> GetAllDocuments();
-        IEnumerable<TDocument> Documents();
+        IEnumerable<TDocument> GetDocuments();
         void SaveAttachment(TId id, string filename, string imageJpeg);
         void DeleteAttachment(TId id, string attachmentName);
     }

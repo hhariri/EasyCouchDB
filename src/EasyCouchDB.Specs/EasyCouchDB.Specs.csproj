@@ -49,6 +49,8 @@
     <Compile Include="LinqSpecs.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="CRUDSpecs.cs" />
+    <Compile Include="QueryManagerSpecs.cs" />
+    <Compile Include="ViewManagerSpecs.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\EasyCouchDB\EasyCouchDB.csproj">

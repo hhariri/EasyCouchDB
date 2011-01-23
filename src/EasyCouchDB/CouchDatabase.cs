@@ -4,18 +4,25 @@ using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Net;
-using EasyCouchDB;
+using EasyCouchDB.Infrastructure;
+using EasyCouchDB.Views;
 using EasyHttp.Http;
 
 namespace EasyCouchDB
 {
-    public class CouchDatabase<TDocument, TId>: ICouchDatabase<TDocument, TId> where TDocument: class, IDocument<TId>
+    public class CouchDatabase<TDocument, TId> : ICouchDatabase<TDocument, TId> where TDocument : class, IDocument<TId>
     {
-        readonly CouchServer _couchServer;
+        readonly ICouchServer _server;
+        readonly IViewManager _viewManager;
 
-        public CouchDatabase(CouchServer couchServer)
+        public CouchDatabase(ICouchServer server) : this(server, new ViewManager(server))
         {
-            _couchServer = couchServer;
+        }
+
+        public CouchDatabase(ICouchServer server, IViewManager viewManager)
+        {
+            _server = server;
+            _viewManager = viewManager;
         }
 
         public string Save(TDocument document)
@@ -29,7 +36,7 @@ namespace EasyCouchDB
 
             if (document.Id != null)
             {
-                var getResponse = _couchServer.Get(document.Id.ToString());
+                HttpResponse getResponse = _server.Get(document.Id.ToString());
 
                 if (getResponse.StatusCode == HttpStatusCode.OK)
                 {
@@ -42,34 +49,41 @@ namespace EasyCouchDB
                     }
 
                     document.Revision = currentDocument.Revision;
-                } 
-                var response = _couchServer.Put(document.Id.ToString(), document);
+                }
+                HttpResponse response = _server.Put(document.Id.ToString(), document);
 
+                if (response.StatusCode != HttpStatusCode.Created && response.StatusCode != HttpStatusCode.OK)
+                {
+                    throw new DocumentUpdateException(response.StatusDescription);
+                }
                 return response.DynamicBody.id;
             }
             // It's a new insert with auto-assign
-            var postResponse = _couchServer.Post("/", document);
+            HttpResponse postResponse = _server.Post("/", document);
+
+            if (postResponse.StatusCode != HttpStatusCode.Created && postResponse.StatusCode != HttpStatusCode.OK)
+            {
+                throw new DocumentUpdateException(postResponse.StatusDescription);
+            }
 
             return postResponse.DynamicBody.id;
-
         }
 
         public TDocument Load(TId id)
         {
+            HttpResponse response = _server.Get(id.ToString());
 
-            var response = _couchServer.Get(id.ToString());
-            
             if (response.StatusCode != HttpStatusCode.NotFound)
             {
                 return response.StaticBody<TDocument>();
             }
 
-            throw new DocumentNotFoundException("id");
+            throw new DocumentNotFoundException(id.ToString());
         }
 
         public void Delete(TId id)
         {
-            var response  = _couchServer.Head(id.ToString());
+            HttpResponse response = _server.Head(id.ToString());
 
             if (response.StatusCode != HttpStatusCode.OK)
             {
@@ -77,51 +91,44 @@ namespace EasyCouchDB
             }
 
 
-            response = _couchServer.Delete(String.Format("{0}?rev={1}", id, response.ETag));
+            response = _server.Delete(String.Format("{0}?rev={1}", id, response.ETag));
 
             if (response.StatusCode != HttpStatusCode.OK)
             {
-                throw new DocumentNotFoundException();
+                throw new DocumentNotFoundException(id.ToString());
             }
         }
 
         public IEnumerable<dynamic> GetAllDocuments()
         {
-            var response = _couchServer.Get("_all_docs?include_docs=true");
+            HttpResponse response = _server.Get("_all_docs?include_docs=true");
 
             var wrapper = response.StaticBody<MultiRowResponseWrapperForAllDocs<TDocument>>();
 
             return wrapper.Rows.Select(t => t.Document).ToList();
         }
 
-        public IEnumerable<TDocument> Documents()
+        public IEnumerable<TDocument> GetDocuments()
         {
-            var response = _couchServer.Head("_design/easycouchdb_views/_view/all");
-
-            if (response.StatusCode != HttpStatusCode.OK)
+            if (!_viewManager.ViewExists("all"))
             {
-                // Save 
-                CreateView();
-
-                response = _couchServer.Get("_design/easycouchdb_views/_view/all");
+                _viewManager.CreateView("all",
+                                        "if (doc.internalDocType=='" + typeof (TDocument).Name +
+                                        "') { emit(doc.id,doc);}");
             }
 
-
-            var wrapper = response.StaticBody<MultiRowResponseWrapperForDocs<TDocument>>();
-
-            return wrapper.Rows.Select(t => t.Document).ToList();
+            return _viewManager.ExecuteView<TDocument>("all");
         }
 
         public void SaveAttachment(TId id, string filename, string contentType)
         {
-
-            var response = _couchServer.Head(id.ToString());
+            HttpResponse response = _server.Head(id.ToString());
 
             string url;
 
             if (response.StatusCode == HttpStatusCode.OK)
             {
-                var revision = response.ETag;
+                string revision = response.ETag;
 
                 url = String.Format("{0}/{1}?rev={2}", id, Path.GetFileName(filename), revision);
             }
@@ -130,52 +137,33 @@ namespace EasyCouchDB
                 url = String.Format("{0}/{1}", id, Path.GetFileName(filename));
             }
 
-            response = _couchServer.PutFile(url, filename, contentType);
+            response = _server.PutFile(url, filename, contentType);
 
             if (response.StatusCode != HttpStatusCode.Created)
             {
-                throw new AttachmentException(response.StatusDescription);   
+                throw new AttachmentException(response.StatusDescription);
             }
         }
 
         public void DeleteAttachment(TId id, string attachmentName)
         {
-            var response = _couchServer.Head(id.ToString());
+            HttpResponse response = _server.Head(id.ToString());
 
             if (response.StatusCode != HttpStatusCode.OK)
             {
                 throw new AttachmentException(response.StatusDescription);
             }
 
-            var url = String.Format("{0}/{1}?rev={2}", id, Path.GetFileName(attachmentName), response.ETag);
+            string url = String.Format("{0}/{1}?rev={2}", id, Path.GetFileName(attachmentName), response.ETag);
 
-            response = _couchServer.Delete(url);
+            response = _server.Delete(url);
 
             if (response.StatusCode != HttpStatusCode.OK)
             {
                 throw new AttachmentException(response.StatusDescription);
             }
-
         }
 
 
-
-        void CreateView()
-        {
-            dynamic mappingFunction = new ExpandoObject();
-
-            mappingFunction.map = "function (doc) { if (doc.internalDocType=='" + typeof(TDocument).Name + "') { emit(doc.id,doc);}}";
-            dynamic mapping = new ExpandoObject();
-
-            mapping.all = mappingFunction;
-
-            dynamic viewDocument = new ExpandoObject();
-
-            viewDocument._id = "_design/easycouchdb_views";
-            viewDocument.language = "javascript";
-            viewDocument.views = mapping;
-
-            _couchServer.Put("_design/easycouchdb_views", viewDocument);
-        }
     }
 }

@@ -2,26 +2,13 @@ using Machine.Specifications;
 
 namespace EasyCouchDB.Specs
 {
-    [Subject( "given document database")]
+    [Subject("given document database")]
     public class when_context
     {
-        Establish context = () =>
-        {
+        Establish context = () => { };
 
-        };
+        Because of = () => { };
 
-        Because of = () =>
-        {
-
-
-        };
-
-        It should_objective = () =>
-        {
-            
-        };
-
+        It should_objective = () => { };
     }
-
-
 }

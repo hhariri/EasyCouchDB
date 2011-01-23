@@ -1,20 +1,20 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using EasyCouchDB.Infrastructure;
 using EasyCouchDB.Specs.Helpers;
 using Machine.Specifications;
 
 namespace EasyCouchDB.Specs
 {
-    [Subject(typeof(CouchDatabase<User, string>), "given a document database")]
-    public class when_creating_a_new_document_with_no_id: DatabaseContext
+    [Subject(typeof (CouchDatabase<User, string>), "given a document database")]
+    public class when_creating_a_new_document_with_no_id : ServerAndDatabaseContext
     {
         Because of = () =>
         {
             user = new User {Fullname = "Jackson"};
 
-            id = couchDb.Save(user);
-
+            id = Database.Save(user);
         };
 
         It should_create_the_document_and_return_a_generated_id = () => id.ShouldNotBeEmpty();
@@ -23,17 +23,16 @@ namespace EasyCouchDB.Specs
         static string id;
     }
 
-    [Subject(typeof(CouchDatabase<User, string>), "given a document database")]
-    public class when_creating_a_new_document_provided_an_id: DatabaseContext
+    [Subject(typeof (CouchDatabase<User, string>), "given a document database")]
+    public class when_creating_a_new_document_provided_an_id : ServerAndDatabaseContext
     {
         Because of = () =>
         {
-            var randomDocumentId = GetRandomDocumentId();
+            string randomDocumentId = GetRandomDocumentId();
 
-            user = new User {Id = randomDocumentId , Fullname = "Jackson"};
+            user = new User {Id = randomDocumentId, Fullname = "Jackson"};
 
-            id = couchDb.Save(user);
-
+            id = Database.Save(user);
         };
 
         It should_create_the_document_and_return_the_given_id = () => id.ShouldEqual(user.Id);
@@ -42,49 +41,43 @@ namespace EasyCouchDB.Specs
         static string id;
     }
 
-    [Subject(typeof(CouchDatabase<User, string>), "given a document database")]
-    public class when_updating_an_existing_document: DatabaseContext
+    [Subject(typeof (CouchDatabase<User, string>), "given a document database")]
+    public class when_updating_an_existing_document : ServerAndDatabaseContext
     {
         Establish context = () =>
         {
-            var randomDocumentId = GetRandomDocumentId();
+            string randomDocumentId = GetRandomDocumentId();
 
-            user = new User { Id = randomDocumentId, Fullname = "Jackson" };
+            user = new User {Id = randomDocumentId, Fullname = "Jackson"};
 
-            id = couchDb.Save(user);
-
+            id = Database.Save(user);
         };
 
         Because of = () =>
         {
-            var document = couchDb.Load(id);
+            User document = Database.Load(id);
 
             document.Fullname = "New Name";
 
-            couchDb.Save(document);
-
+            Database.Save(document);
         };
 
         It should_update_the_document = () =>
         {
-            var updatedDocument = couchDb.Load(id);
+            User updatedDocument = Database.Load(id);
 
             updatedDocument.Fullname.ShouldEqual("New Name");
         };
+
         static User user;
         static string id;
     }
 
- 
-   
-    [Subject(typeof(CouchDatabase<User, string>), "given a document database")]
-    public class when_getting_a_document_by_id_that_exists: DatabaseContext
-    {
 
-        Because of = () =>
-        {
-            user = couchDb.Load(DocumentId);
-        };
+    [Subject(typeof (CouchDatabase<User, string>), "given a document database")]
+    public class when_getting_a_document_by_id_that_exists : ServerAndDatabaseContext
+    {
+        Because of = () => { user = Database.Load(DocumentId); };
 
         It should_retrieve_the_document = () => user.ShouldNotBeNull();
 
@@ -97,97 +90,85 @@ namespace EasyCouchDB.Specs
         static User user;
     }
 
-    [Subject(typeof(CouchDatabase<User, string>), "given a document database")]
-    public class when_deleting_an_existing_document: DatabaseContext
+    [Subject(typeof (CouchDatabase<User, string>), "given a document database")]
+    public class when_deleting_an_existing_document : ServerAndDatabaseContext
     {
         Establish context = () =>
         {
             randomDocumentId = string.Format("{0}DeleteTest", GetRandomDocumentId());
 
-            couchDb.Save(new User() { Id = randomDocumentId });
+            Database.Save(new User {Id = randomDocumentId});
         };
 
-        Because of = () =>
-        {
-            couchDb.Delete(randomDocumentId);
-        };
+        Because of = () => { Database.Delete(randomDocumentId); };
 
         It should_delete_the_document = () =>
         {
             try
             {
-                couchDb.Load(randomDocumentId);
+                Database.Load(randomDocumentId);
             }
             catch (DocumentNotFoundException)
             {
                 true.ShouldBeTrue();
             }
-       };
+        };
 
         static string randomDocumentId;
     }
 
-    [Subject(typeof(CouchDatabase<User, string>), "given a document database")]
-    public class when_getting_a_list_of_documents: DatabaseContext
+    [Subject(typeof (CouchDatabase<User, string>), "given a document database")]
+    public class when_getting_a_list_of_documents : ServerAndDatabaseContext
     {
         Because of = () =>
         {
-            documents = from d in couchDb.Documents()
+            documents = from d in Database.GetDocuments()
                         select d;
-
         };
 
-        It should_return_all_documents = () =>
-        {
-            documents.ShouldNotBeEmpty();
-        };
+        It should_return_all_documents = () => { documents.ShouldNotBeEmpty(); };
 
-        It should_set_document_properties = () =>
-        {
-            documents.First().Fullname.ShouldNotBeEmpty();
-        };
+        It should_set_document_properties = () => { documents.First().Fullname.ShouldNotBeEmpty(); };
 
         static IEnumerable<User> documents;
     }
 
 
-
-    public class DatabaseContext
+    public class ServerAndDatabaseContext
     {
-        Establish context = () =>
-        {
-            DocumentId = GetRandomDocumentId();
-
-            var connection = new CouchServer("localhost", 5984, "easycouchdb");
-
-            couchDb = new CouchDatabase<User, string>(connection);
-
-            var user = new User { Id = DocumentId, Fullname = "My First User", EmailAddress = "MyEmail@MyDomain.com" };
-
-            couchDb.Save(user);
-
-        };
+        protected static ICouchDatabase<User, string> Database;
+        protected static ICouchServer Server;
+        protected static string DocumentId;
 
         Cleanup cleanup = () =>
         {
             try
             {
-                couchDb.Delete("_design/easycouchdb_views");
+                Database.Delete("_design/easycouchdb_view_all");
             }
             catch (Exception)
             {
-
                 throw;
             }
         };
 
-        protected static ICouchDatabase<User, string> couchDb;
-        protected static string DocumentId;
+        Establish context = () =>
+        {
+            DocumentId = GetRandomDocumentId();
+
+            Server = new CouchServer("localhost", 5984, "easycouchdb");
+
+            Database = new CouchDatabase<User, string>(Server);
+
+            var user = new User {Id = DocumentId, Fullname = "My First User", EmailAddress = "MyEmail@MyDomain.com"};
+
+            Database.Save(user);
+        };
 
         protected static string GetRandomDocumentId()
         {
             var random = new Random();
-          
+
             return String.Format("{0}{1}", DateTime.Now.Ticks, random.Next(10, 10000));
         }
     }

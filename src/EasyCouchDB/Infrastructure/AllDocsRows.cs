@@ -1,8 +1,8 @@
 ﻿using JsonFx.Json;
 
-namespace EasyCouchDB
+namespace EasyCouchDB.Infrastructure
 {
-    public class AllDocsRows<TDocument> 
+    public class AllDocsRows<TDocument>
     {
         [JsonName("doc")]
         public TDocument Document { get; set; }

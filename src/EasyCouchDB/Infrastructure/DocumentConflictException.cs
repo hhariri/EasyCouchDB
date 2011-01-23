@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.Serialization;
 
-namespace EasyCouchDB
+namespace EasyCouchDB.Infrastructure
 {
     public class DocumentConflictException : Exception
     {

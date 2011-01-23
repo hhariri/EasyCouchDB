@@ -1,6 +1,6 @@
 ﻿using JsonFx.Json;
 
-namespace EasyCouchDB
+namespace EasyCouchDB.Infrastructure
 {
     public class DocsRows<TDocument>
     {
