@@ -1,3 +1,33 @@
+#region License
+// Distributed under the BSD License
+// =================================
+// 
+// Copyright (c) 2010-2011, Hadi Hariri
+// All rights reserved.
+// 
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//     * Redistributions of source code must retain the above copyright
+//       notice, this list of conditions and the following disclaimer.
+//     * Redistributions in binary form must reproduce the above copyright
+//       notice, this list of conditions and the following disclaimer in the
+//       documentation and/or other materials provided with the distribution.
+//     * Neither the name of Hadi Hariri nor the
+//       names of its contributors may be used to endorse or promote products
+//       derived from this software without specific prior written permission.
+// 
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+// ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+// WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+// DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY
+// DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+// (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+// LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+// ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// =============================================================
+#endregion
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +37,7 @@ using Machine.Specifications;
 
 namespace EasyCouchDB.Specs
 {
-    [Subject(typeof (CouchDatabase<User, string>), "given a document database")]
+    [Subject(typeof (CouchDatabase), "given a document database")]
     public class when_creating_a_new_document_with_no_id : ServerAndDatabaseContext
     {
         Because of = () =>
@@ -23,7 +53,7 @@ namespace EasyCouchDB.Specs
         static string id;
     }
 
-    [Subject(typeof (CouchDatabase<User, string>), "given a document database")]
+    [Subject(typeof (CouchDatabase), "given a document database")]
     public class when_creating_a_new_document_provided_an_id : ServerAndDatabaseContext
     {
         Because of = () =>
@@ -41,7 +71,7 @@ namespace EasyCouchDB.Specs
         static string id;
     }
 
-    [Subject(typeof (CouchDatabase<User, string>), "given a document database")]
+    [Subject(typeof (CouchDatabase), "given a document database")]
     public class when_updating_an_existing_document : ServerAndDatabaseContext
     {
         Establish context = () =>
@@ -55,7 +85,7 @@ namespace EasyCouchDB.Specs
 
         Because of = () =>
         {
-            User document = Database.Load(id);
+            var document = Database.Load<User>(id);
 
             document.Fullname = "New Name";
 
@@ -64,7 +94,7 @@ namespace EasyCouchDB.Specs
 
         It should_update_the_document = () =>
         {
-            User updatedDocument = Database.Load(id);
+            var updatedDocument = Database.Load<User>(id);
 
             updatedDocument.Fullname.ShouldEqual("New Name");
         };
@@ -74,10 +104,10 @@ namespace EasyCouchDB.Specs
     }
 
 
-    [Subject(typeof (CouchDatabase<User, string>), "given a document database")]
+    [Subject(typeof (CouchDatabase), "given a document database")]
     public class when_getting_a_document_by_id_that_exists : ServerAndDatabaseContext
     {
-        Because of = () => { user = Database.Load(DocumentId); };
+        Because of = () => { user = Database.Load<User>(DocumentId); };
 
         It should_retrieve_the_document = () => user.ShouldNotBeNull();
 
@@ -90,7 +120,7 @@ namespace EasyCouchDB.Specs
         static User user;
     }
 
-    [Subject(typeof (CouchDatabase<User, string>), "given a document database")]
+    [Subject(typeof (CouchDatabase), "given a document database")]
     public class when_deleting_an_existing_document : ServerAndDatabaseContext
     {
         Establish context = () =>
@@ -106,7 +136,7 @@ namespace EasyCouchDB.Specs
         {
             try
             {
-                Database.Load(randomDocumentId);
+                Database.Load<User>(randomDocumentId);
             }
             catch (DocumentNotFoundException)
             {
@@ -117,12 +147,12 @@ namespace EasyCouchDB.Specs
         static string randomDocumentId;
     }
 
-    [Subject(typeof (CouchDatabase<User, string>), "given a document database")]
+    [Subject(typeof (CouchDatabase), "given a document database")]
     public class when_getting_a_list_of_documents : ServerAndDatabaseContext
     {
         Because of = () =>
         {
-            documents = from d in Database.GetDocuments()
+            documents = from d in Database.GetDocuments<User>()
                         select d;
         };
 
@@ -136,7 +166,7 @@ namespace EasyCouchDB.Specs
 
     public class ServerAndDatabaseContext
     {
-        protected static ICouchDatabase<User, string> Database;
+        protected static ICouchDatabase Database;
         protected static ICouchServer Server;
         protected static string DocumentId;
 
@@ -158,7 +188,7 @@ namespace EasyCouchDB.Specs
 
             Server = new CouchServer("localhost", 5984, "easycouchdb");
 
-            Database = new CouchDatabase<User, string>(Server);
+            Database = new CouchDatabase(Server);
 
             var user = new User {Id = DocumentId, Fullname = "My First User", EmailAddress = "MyEmail@MyDomain.com"};
 
